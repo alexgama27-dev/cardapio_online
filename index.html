@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio Online</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <header class="header">
+        <img id="logo" class="logo" alt="Logo da Loja">
+        <h1 id="store-name">Carregando...</h1>
+    </header>
+
+    <main id="products" class="products"></main>
+
+    <button class="cart-float" onclick="Cart.toggle()">
+        🛒 Ver Carrinho  
+        <span id="cart-total-float">R$ 0,00</span>
+    </button>
+
+    <div id="cart-modal" class="cart-modal hidden">
+        <div class="cart-box">
+            <h2>Seu Pedido</h2>
+            <div id="cart-items"></div>
+            <div class="cart-total">
+                Total: <span id="cart-total">R$ 0,00</span>
+            </div>
+            <button onclick="Cart.checkout()" class="btn-primary">Finalizar Pedido</button>
+            <button onclick="Cart.toggle()" class="btn-secondary">Fechar</button>
+        </div>
+    </div>
+
+    <div id="checkout-modal" class="checkout-modal hidden">
+        <div class="checkout-box">
+            <h2>Finalizar Pedido</h2>
+            
+            <div class="form-group">
+                <label>Seu Nome</label>
+                <input id="cliente-nome" placeholder="Ex: João Silva">
+            </div>
+
+            <div class="form-group">
+                <label>Bairro para Entrega</label>
+                <select id="cliente-bairro" onchange="Cart.atualizarTaxa(this.value)">
+                    <option value="0">Carregando bairros...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Endereço Completo</label>
+                <input id="cliente-endereco" placeholder="Rua, número e ponto de referência">
+            </div>
+
+            <div class="form-group">
+                <label>Forma de Pagamento</label>
+                <select id="cliente-pagamento">
+                    <option value="">Escolha como pagar</option>
+                    <option value="Pix">Pix</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Cartão">Cartão</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Observações (Opcional)</label>
+                <textarea id="cliente-obs" placeholder="Ex: Sem cebola, trocar troco para R$ 50..."></textarea>
+            </div>
+
+            <button onclick="Cart.sendOrder()" class="btn-primary">
+                🚀 Enviar Pedido para o WhatsApp
+            </button>
+            
+            <button onclick="Cart.closeCheckout()" class="btn-secondary">
+                Voltar
+            </button>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+
+</body>
+</html>

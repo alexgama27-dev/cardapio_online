@@ -1,0 +1,236 @@
+:root {
+    /* Cores padrão (serão sobrescritas pelo JavaScript da planilha) */
+    --cor-principal: #ff8c00;
+    --cor-secundaria: #ff6a00;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    background: #f8f9fa;
+    color: #333;
+    padding-bottom: 80px; /* Espaço para o botão flutuante não cobrir o conteúdo */
+}
+
+/* Header mais moderno */
+.header {
+    background: linear-gradient(135deg, var(--cor-principal), var(--cor-secundaria));
+    color: white;
+    text-align: center;
+    padding: 30px 20px;
+    border-radius: 0 0 25px 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.logo {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 50%;
+    background: white;
+    padding: 3px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    margin-bottom: 10px;
+}
+
+#store-name {
+    margin: 10px 0 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Lista de Produtos */
+.products {
+    padding: 20px 15px;
+}
+
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.card:active {
+    transform: scale(0.98);
+}
+
+.card-info {
+    flex: 1;
+    padding-right: 15px;
+}
+
+.card-info h3 {
+    margin: 0 0 5px;
+    font-size: 1.1rem;
+    color: #222;
+}
+
+.card-info p {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.3;
+}
+
+.price {
+    font-weight: bold;
+    color: #27ae60;
+    font-size: 1.1rem;
+}
+
+.card img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/* Botões Modernos */
+.btn-primary {
+    background: var(--cor-principal);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    width: 100%;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: 0.3s;
+}
+
+.btn-primary:hover {
+    filter: brightness(1.1);
+}
+
+.btn-secondary {
+    background: #f1f1f1;
+    color: #666;
+    border: none;
+    padding: 12px;
+    border-radius: 12px;
+    width: 100%;
+    margin-top: 10px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Carrinho Flutuante */
+.cart-float {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background: var(--cor-principal);
+    color: white;
+    border: none;
+    padding: 18px;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 99;
+}
+
+/* Modais Profissionais */
+.cart-modal, .checkout-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* Abre de baixo no mobile */
+    z-index: 1000;
+}
+
+.cart-box, .checkout-box {
+    background: white;
+    padding: 25px;
+    border-radius: 25px 25px 0 0;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* Formulários */
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #555;
+    text-transform: uppercase;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    background: #fdfdfd;
+    font-size: 16px;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--cor-principal);
+    box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.1);
+}
+
+textarea {
+    resize: none;
+    height: 80px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Estilo dos itens no resumo do carrinho */
+.cart-item-row {
+    border-bottom: 1px dashed #eee;
+    padding: 10px 0;
+}
+
+.cart-total {
+    margin: 20px 0;
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-align: right;
+    color: #222;
+}
+
+/* Ajuste para telas maiores */
+@media (min-width: 768px) {
+    .cart-modal, .checkout-modal {
+        align-items: center;
+    }
+    .cart-box, .checkout-box {
+        border-radius: 20px;
+        width: 400px;
+    }
+}
