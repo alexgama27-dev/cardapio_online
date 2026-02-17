@@ -1,123 +1,110 @@
 const Cart = {
     items: [],
-    taxaEntrega: 0,
 
+    // Adiciona ao carrinho ou aumenta quantidade se já existir
     add(product) {
-        const valor = parseFloat(String(product.preco || product.preço || 0).replace(',', '.'));
-        const itemExistente = this.items.find(item => item.id === product.id);
+        const index = this.items.findIndex(item => item.nome === product.nome);
         
-        if (itemExistente) {
-            itemExistente.qtd++;
+        if (index > -1) {
+            this.items[index].quantidade += 1;
         } else {
-            this.items.push({ ...product, preco: valor, qtd: 1 });
+            this.items.push({
+                nome: product.nome,
+                preco: parseFloat(String(product.preco || product.preço).replace(',', '.')),
+                quantidade: 1
+            });
         }
         this.render();
     },
 
-    atualizarTaxa(valor) {
-        this.taxaEntrega = parseFloat(valor);
+    // Diminui quantidade ou remove
+    remove(index) {
+        if (this.items[index].quantidade > 1) {
+            this.items[index].quantidade -= 1;
+        } else {
+            this.items.splice(index, 1);
+        }
         this.render();
     },
 
-    getTotal() {
-        const subtotal = this.items.reduce((acc, item) => acc + (item.preco * item.qtd), 0);
-        return subtotal + this.taxaEntrega;
+    // Aumenta quantidade direto no carrinho
+    increase(index) {
+        this.items[index].quantidade += 1;
+        this.render();
     },
 
+    // Limpa todo o carrinho
+    clear() {
+        if (confirm("Deseja realmente esvaziar seu carrinho?")) {
+            this.items = [];
+            this.render();
+        }
+    },
+
+    // Atualiza a visualização do carrinho e modais
     render() {
-        const total = this.getTotal();
-        const totalFormatado = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        const cartItems = document.getElementById("cart-items");
+        const cartTotal = document.getElementById("cart-total");
+        const cartTotalFloat = document.getElementById("cart-total-float");
         
-        if(document.getElementById("cart-total-float")) document.getElementById("cart-total-float").innerText = totalFormatado;
-        if(document.getElementById("cart-total")) document.getElementById("cart-total").innerText = totalFormatado;
+        let total = 0;
+        cartItems.innerHTML = "";
 
-        const container = document.getElementById("cart-items");
-        if (container) {
-            container.innerHTML = this.items.map(item => `
-                <div class="cart-item-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed #eee;">
-                    <span><strong>${item.qtd}x</strong> ${item.nome}</span>
-                    <span>R$ ${(item.preco * item.qtd).toFixed(2).replace('.', ',')}</span>
-                </div>
-            `).join('');
+        this.items.forEach((item, index) => {
+            const subtotal = item.preco * item.quantidade;
+            total += subtotal;
 
-            if (this.taxaEntrega > 0) {
-                container.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; margin-top:10px; color: #27ae60; font-weight:bold;">
-                        <span>Taxa de Entrega</span>
-                        <span>R$ ${this.taxaEntrega.toFixed(2).replace('.', ',')}</span>
+            cartItems.innerHTML += `
+                <div class="cart-item-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div>
+                        <div style="font-weight: bold;">${item.nome}</div>
+                        <div style="font-size: 0.9rem; color: var(--cor-secundaria);">R$ ${item.preco.toFixed(2).replace('.', ',')}</div>
                     </div>
-                `;
-            }
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button onclick="Cart.remove(${index})" style="background: #eee; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">-</button>
+                        <span style="font-weight: bold;">${item.quantidade}</span>
+                        <button onclick="Cart.increase(${index})" style="background: #eee; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">+</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        if (this.items.length === 0) {
+            cartItems.innerHTML = "<p style='text-align:center; color:#999;'>Seu carrinho está vazio.</p>";
+            // Adiciona botão de esvaziar apenas se houver itens (opcional, mas aqui vamos esconder se vazio)
+        } else {
+            cartItems.innerHTML += `
+                <button onclick="Cart.clear()" style="background: none; border: none; color: #ff4444; font-size: 0.8rem; cursor: pointer; margin-top: 10px; text-decoration: underline;">
+                    🗑️ Esvaziar Carrinho
+                </button>
+            `;
         }
+
+        const totalFormatado = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        cartTotal.innerText = totalFormatado;
+        cartTotalFloat.innerText = totalFormatado;
     },
 
-    toggle() { document.getElementById("cart-modal").classList.toggle("hidden"); },
-    
+    toggle() {
+        document.getElementById("cart-modal").classList.toggle("hidden");
+    },
+
     checkout() {
-        if (this.items.length === 0) return alert("Seu carrinho está vazio!");
+        if (this.items.length === 0) {
+            alert("Adicione pelo menos um item para continuar!");
+            return;
+        }
         this.toggle();
         document.getElementById("checkout-modal").classList.remove("hidden");
     },
 
-    closeCheckout() { document.getElementById("checkout-modal").classList.add("hidden"); },
+    closeCheckout() {
+        document.getElementById("checkout-modal").classList.add("hidden");
+    },
 
-    sendOrder() {
-        const nome = document.getElementById("cliente-nome").value;
-        const endereco = document.getElementById("cliente-endereco").value;
-        const bairroSelect = document.getElementById("cliente-bairro");
-        
-        // Pega apenas o nome do bairro, sem o valor da taxa
-        const bairroTextoCompleto = bairroSelect.options[bairroSelect.selectedIndex].text;
-        const bairroNome = bairroTextoCompleto.split(' - ')[0]; 
-        
-        const pagto = document.getElementById("cliente-pagamento").value;
-        const obs = document.getElementById("cliente-obs").value;
-
-        if (!nome || !endereco || pagto === "" || bairroSelect.value === "0") {
-            return alert("⚠️ Por favor, preencha todos os campos e selecione o bairro!");
-        }
-
-        // Pop-up de aviso para Pix
-        if (pagto === "Pix") {
-            alert("📢 LEMBRETE: Após enviar a mensagem no WhatsApp, não esqueça de mandar o COMPROVANTE do Pix para iniciarmos o seu pedido!");
-        }
-
-        const subtotal = this.items.reduce((acc, item) => acc + (item.preco * item.qtd), 0);
-        const totalGeral = subtotal + this.taxaEntrega;
-
-        // Montagem da mensagem limpa e profissional
-        let msg = `*🟢 NOVO PEDIDO - ${window.storeConfig.nome_loja}*\n`;
-        msg += `------------------------------------------\n`;
-        msg += `👤 *Cliente:* ${nome}\n`;
-        msg += `📍 *Bairro:* ${bairroNome}\n`;
-        msg += `🏠 *Endereço:* ${endereco}\n`;
-        msg += `💳 *Pagamento:* ${pagto}\n`;
-        
-        if(obs.trim() !== "") {
-            msg += `💬 *Obs:* ${obs}\n`;
-        }
-        
-        msg += `------------------------------------------\n`;
-        msg += `🛒 *ITENS DO PEDIDO:*\n`;
-        
-        this.items.forEach(i => {
-            msg += `*${i.qtd}x* ${i.nome} _(R$ ${i.preco.toFixed(2).replace('.', ',')})_\n`;
-        });
-        
-        msg += `------------------------------------------\n`;
-        msg += `💵 *Subtotal:* R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
-        msg += `🛵 *Taxa de Entrega:* R$ ${this.taxaEntrega.toFixed(2).replace('.', ',')}\n`;
-        msg += `💰 *TOTAL A PAGAR:* *R$ ${totalGeral.toFixed(2).replace('.', ',')}*\n`;
-        msg += `------------------------------------------\n`;
-
-        if (pagto === "Pix") {
-            msg += `\n⚠️ *Aguardamos o comprovante do Pix abaixo.*`;
-        }
-
-        // Limpeza do telefone e abertura do link
-        const foneLoja = String(window.storeConfig.telefone).replace(/\D/g, '');
-        const url = `https://wa.me/${foneLoja}?text=${encodeURIComponent(msg)}`;
-        
-        window.open(url, '_blank');
+    atualizarTaxa(valor) {
+        // Lógica da taxa de entrega que faremos amanhã/depois
+        const taxa = parseFloat(valor);
+        this.renderComTaxa(taxa);
     }
 };
