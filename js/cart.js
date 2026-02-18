@@ -1,159 +1,141 @@
 const Cart = {
     items: [],
 
-    // 1. ADICIONAR OU AUMENTAR QUANTIDADE
-    add(product) {
-        let precoLimpo = product.preco || product.preço || 0;
-        if (typeof precoLimpo === 'string') {
-            precoLimpo = parseFloat(precoLimpo.replace(',', '.'));
-        }
-
-        const index = this.items.findIndex(item => item.nome === product.nome);
-        
-        if (index > -1) {
-            this.items[index].quantidade += 1;
+    add: function(product) {
+        const existingItem = this.items.find(item => item.nome === product.nome);
+        if (existingItem) {
+            existingItem.quantidade = (existingItem.quantidade || 1) + 1;
         } else {
-            this.items.push({
-                nome: product.nome,
-                preco: precoLimpo,
-                quantidade: 1
-            });
+            this.items.push({ ...product, quantidade: 1 });
         }
-        
         this.render();
+        this.updateTotal();
     },
 
-    // 2. DIMINUIR QUANTIDADE
-    remove(index) {
+    remove: function(index) {
         if (this.items[index].quantidade > 1) {
             this.items[index].quantidade -= 1;
         } else {
             this.items.splice(index, 1);
         }
         this.render();
+        this.updateTotal();
     },
 
-    // 3. AUMENTAR QUANTIDADE
-    increase(index) {
-        this.items[index].quantidade += 1;
-        this.render();
+    clear: function() {
+        if (this.items.length === 0) return;
+        if (confirm("Deseja realmente remover todos os itens do pedido?")) {
+            this.items = [];
+            this.render();
+            this.updateTotal();
+            this.toggle();
+        }
     },
 
-    // 4. ATUALIZAR INTERFACE DO CARRINHO
-    render() {
-        const cartItems = document.getElementById("cart-items");
-        const cartTotal = document.getElementById("cart-total");
-        const cartTotalFloat = document.getElementById("cart-total-float");
-        
-        if (!cartItems) return;
+    updateTotal: function() {
+        let subtotal = this.items.reduce((acc, item) => {
+            const preco = parseFloat(String(item.preco || item.preço || 0).replace(',', '.'));
+            return acc + (preco * (item.quantidade || 1));
+        }, 0);
 
-        let total = 0;
-        cartItems.innerHTML = "";
+        const taxaEntrega = parseFloat(document.getElementById("cliente-bairro")?.value || 0);
+        const totalGeral = subtotal + taxaEntrega;
 
-        this.items.forEach((item, index) => {
-            const subtotal = item.preco * item.quantidade;
-            total += subtotal;
+        const totalEl = document.getElementById("cart-total");
+        if (totalEl) totalEl.innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
 
-            cartItems.innerHTML += `
-                <div class="cart-item-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
-                    <div style="flex: 1;">
-                        <div style="font-weight: bold;">${item.nome}</div>
-                        <div style="font-size: 0.9rem; color: #666;">R$ ${item.preco.toFixed(2).replace('.', ',')}</div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <button onclick="Cart.remove(${index})" style="width:30px; height:30px; border-radius:5px; border:none; background:#eee; cursor:pointer; font-weight:bold;">-</button>
-                        <span style="font-weight: bold; min-width: 20px; text-align: center;">${item.quantidade}</span>
-                        <button onclick="Cart.increase(${index})" style="width:30px; height:30px; border-radius:5px; border:none; background:#eee; cursor:pointer; font-weight:bold;">+</button>
-                    </div>
-                </div>
-            `;
-        });
+        const floatTotalEl = document.getElementById("cart-total-float");
+        if (floatTotalEl) floatTotalEl.innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+    },
+
+    render: function() {
+        const container = document.getElementById("cart-items");
+        if (!container) return;
 
         if (this.items.length === 0) {
-            cartItems.innerHTML = "<p style='text-align:center; color:#999;'>Seu carrinho está vazio.</p>";
+            container.innerHTML = "<p style='text-align:center; padding:20px; color:#666;'>Seu carrinho está vazio.</p>";
+            return;
         }
 
-        const totalFormatado = `R$ ${total.toFixed(2).replace('.', ',')}`;
-        if (cartTotal) cartTotal.innerText = totalFormatado;
-        if (cartTotalFloat) cartTotalFloat.innerText = totalFormatado;
+        container.innerHTML = this.items.map((item, index) => {
+            const preco = parseFloat(String(item.preco || item.preço || 0).replace(',', '.'));
+            const itemJson = JSON.stringify(item).replace(/'/g, "&apos;");
+
+            return `
+                <div class="cart-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0;">
+                    <div class="cart-item-info">
+                        <strong>${item.nome}</strong><br>
+                        <span>R$ ${(preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
+                    </div>
+                    <div class="cart-controls" style="display: flex; align-items: center; gap: 12px;">
+                        <button onclick="Cart.remove(${index})" style="width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ccc; background: #fff; cursor: pointer;">-</button>
+                        <span style="font-weight: bold;">${item.quantidade}</span>
+                        <button onclick='Cart.add(${itemJson})' style="width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ccc; background: #fff; cursor: pointer;">+</button>
+                    </div>
+                </div>`;
+        }).join('');
     },
 
-    // 5. CONTROLE DE MODAIS
-    toggle() {
+    toggle: function() {
         const modal = document.getElementById("cart-modal");
         if (modal) modal.classList.toggle("hidden");
     },
 
-    checkout() {
-        if (this.items.length === 0) {
-            alert("Adicione itens antes de finalizar!");
-            return;
-        }
-        document.getElementById("cart-modal").classList.add("hidden");
+    checkout: function() {
+        if (this.items.length === 0) { alert("Adicione pelo menos um item!"); return; }
+        this.toggle();
         document.getElementById("checkout-modal").classList.remove("hidden");
     },
 
-    closeCheckout() {
+    closeCheckout: function() {
         document.getElementById("checkout-modal").classList.add("hidden");
-        document.getElementById("cart-modal").classList.remove("hidden");
     },
 
-    atualizarTaxa(valor) {
-        console.log("Taxa selecionada:", valor);
-    },
+    atualizarTaxa: function() { this.updateTotal(); },
 
-    // 6. ENVIO PARA WHATSAPP (LIMPO E SEM EMOJIS PROBLEMÁTICOS)
-    sendOrder() {
+    sendOrder: function() {
         const nome = document.getElementById("cliente-nome").value;
-        const bairroSel = document.getElementById("cliente-bairro");
+        const bairroSelect = document.getElementById("cliente-bairro");
+        const bairroNome = bairroSelect.options[bairroSelect.selectedIndex].text;
+        const taxaTexto = "R$ " + parseFloat(bairroSelect.value).toFixed(2).replace('.', ',');
         const endereco = document.getElementById("cliente-endereco").value;
         const pagamento = document.getElementById("cliente-pagamento").value;
-        const obs = document.getElementById("cliente-obs").value;
+        const obs = document.getElementById("cliente-obs").value || "Nenhuma";
 
-        if (!nome || !endereco || !pagamento || !bairroSel || bairroSel.value === "0") {
+        if (!nome || !endereco || !pagamento || bairroSelect.value === "0") {
             alert("Por favor, preencha todos os campos obrigatórios!");
             return;
         }
 
-        const bairroNome = bairroSel.options[bairroSel.selectedIndex].text;
-        const taxa = parseFloat(bairroSel.value);
+        // Puxa telefone da planilha (coluna 'telefone')
+        let foneRaw = window.storeConfig.telefone ? String(window.storeConfig.telefone).replace(/\D/g, '') : "";
+        if (foneRaw.length <= 11) foneRaw = "55" + foneRaw;
+
+        // FORMATAÇÃO DA MENSAGEM APROVADA
+        let mensagem = `*${window.storeConfig.nome_loja}*\n`;
+        mensagem += `-------------------------\n`;
+        mensagem += `*Cliente:* ${nome}\n`;
+        mensagem += `*Endereco:* ${endereco}\n`;
+        mensagem += `*Bairro:* ${bairroNome} - ${taxaTexto}\n`;
+        mensagem += `-------------------------\n`;
+        mensagem += `*PEDIDO:*\n`;
         
-        let itensTxt = "";
-        let totalProdutos = 0;
         this.items.forEach(item => {
-            const sub = item.preco * item.quantidade;
-            totalProdutos += sub;
-            itensTxt += `*${item.quantidade}x* ${item.nome} - R$ ${sub.toFixed(2).replace('.', ',')}\n`;
+            const preco = parseFloat(String(item.preco || item.preço || 0).replace(',', '.'));
+            mensagem += `${item.quantidade}x ${item.nome} - R$ ${(preco * item.quantidade).toFixed(2).replace('.', ',')}\n`;
         });
 
-        const totalGeral = totalProdutos + taxa;
-        const config = window.storeConfig || {};
-        const nomeLoja = config.nome_loja || "Pedido";
-        let fone = config.telefone ? String(config.telefone).replace(/\D/g, '') : "";
+        const totalGeral = document.getElementById("cart-total").innerText;
+        mensagem += `\n-------------------------\n`;
+        mensagem += `*Taxa de Entrega:* ${taxaTexto}\n`;
+        mensagem += `*TOTAL DO PEDIDO:* ${totalGeral}\n`;
+        mensagem += `-------------------------\n`;
+        mensagem += `*Forma de Pagamento:* ${pagamento}\n`;
+        mensagem += `*Observacoes:* ${obs}\n`;
+        mensagem += `-------------------------\n`;
+        mensagem += `_Pedido enviado via Cardapio Digital_`;
 
-        // Garante o código do país se necessário
-        if (fone.length > 0 && fone.length <= 11) fone = "55" + fone;
-
-        const msg = encodeURIComponent(
-`*${nomeLoja.toUpperCase()}*
--------------------------
-*Cliente:* ${nome}
-*Endereco:* ${endereco}
-*Bairro:* ${bairroNome}
--------------------------
-*PEDIDO:*
-${itensTxt}
--------------------------
-*Taxa de Entrega:* R$ ${taxa.toFixed(2).replace('.', ',')}
-*TOTAL DO PEDIDO: R$ ${totalGeral.toFixed(2).replace('.', ',')}*
--------------------------
-*Forma de Pagamento:* ${pagamento}
-*Observacoes:* ${obs || 'Nenhuma'}
--------------------------
-_Pedido enviado via Cardapio Digital_`
-        );
-
-        const url = `https://wa.me/${fone}?text=${msg}`;
-        window.open(url, '_blank');
+        const url = `https://api.whatsapp.com/send?phone=${foneRaw}&text=${encodeURIComponent(mensagem)}`;
+        window.open(url, "_blank");
     }
 };
