@@ -1,22 +1,31 @@
 const Cart = {
     items: [],
-    bairrosData: [],   // <-- Array com os bairros e taxas vindo da API
-    taxaEntrega: 0,    // Taxa de entrega atual baseada no bairro
+    bairrosData: [],
+    taxaEntrega: 0,
 
+    // =========================================
+    // ADICIONAR ITEM
+    // =========================================
     add: function(product) {
         const existingItem = this.items.find(item => item.nome === product.nome);
         if (existingItem) {
             existingItem.quantidade = (existingItem.quantidade || 1) + 1;
         } else {
-            this.items.push({ ...product, quantidade: 1 });
+            this.items.push({
+                ...product,
+                quantidade: 1
+            });
         }
         this.render();
         this.update();
     },
 
+    // =========================================
+    // REMOVER ITEM
+    // =========================================
     remove: function(index) {
         if (this.items[index].quantidade > 1) {
-            this.items[index].quantidade -= 1;
+            this.items[index].quantidade--;
         } else {
             this.items.splice(index, 1);
         }
@@ -24,9 +33,12 @@ const Cart = {
         this.update();
     },
 
+    // =========================================
+    // LIMPAR CARRINHO
+    // =========================================
     clear: function() {
         if (this.items.length === 0) return;
-        if (confirm("Deseja realmente remover todos os itens do pedido?")) {
+        if (confirm("Deseja realmente limpar o carrinho?")) {
             this.items = [];
             this.render();
             this.update();
@@ -34,40 +46,48 @@ const Cart = {
         }
     },
 
+    // =========================================
+    // RENDERIZAR CARRINHO
+    // =========================================
     render: function() {
         const container = document.getElementById("cart-items");
         if (!container) return;
 
         if (this.items.length === 0) {
-            container.innerHTML = "<p style='text-align:center; padding:20px; color:#666;'>Seu carrinho está vazio.</p>";
+            container.innerHTML = "<p style='text-align:center;padding:20px;color:#666;'>Seu carrinho está vazio.</p>";
             return;
         }
 
         container.innerHTML = this.items.map((item, index) => {
             const preco = parseFloat(String(item.preco || item.preço || 0).replace(',', '.'));
             const itemJson = JSON.stringify(item).replace(/'/g, "&apos;");
+
             return `
-                <div class="cart-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0;">
-                    <div class="cart-item-info">
+                <div class="cart-item" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:10px 0;">
+                    <div>
                         <strong>${item.nome}</strong><br>
                         <span>R$ ${(preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
                     </div>
-                    <div class="cart-controls" style="display: flex; align-items: center; gap: 12px;">
-                        <button onclick="Cart.remove(${index})" style="width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ccc; background: #fff; cursor: pointer;">-</button>
-                        <span style="font-weight: bold;">${item.quantidade}</span>
-                        <button onclick='Cart.add(${itemJson})' style="width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ccc; background: #fff; cursor: pointer;">+</button>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <button onclick="Cart.remove(${index})" style="width:30px;height:30px;border-radius:50%;border:1px solid #ccc;background:white;">-</button>
+                        <strong>${item.quantidade}</strong>
+                        <button onclick='Cart.add(${itemJson})' style="width:30px;height:30px;border-radius:50%;border:1px solid #ccc;background:white;">+</button>
                     </div>
-                </div>`;
+                </div>
+            `;
         }).join('');
     },
 
+    // =========================================
+    // MODAIS
+    // =========================================
     toggle: function() {
         const modal = document.getElementById("cart-modal");
         if (modal) modal.classList.toggle("hidden");
     },
 
     checkout: function() {
-        if (this.items.length === 0) { alert("Adicione pelo menos um item!"); return; }
+        if (this.items.length === 0) return alert("Adicione itens primeiro");
         this.toggle();
         document.getElementById("checkout-modal").classList.remove("hidden");
     },
@@ -77,95 +97,148 @@ const Cart = {
     },
 
     // =========================================
-    // NOVA FUNÇÃO: identifica bairro digitado
+    // AUTOCOMPLETE BAIRROS
     // =========================================
-    identificarBairro: function(nomeDigitado) {
-        if (!nomeDigitado || nomeDigitado.length < 3) {
-            this.taxaEntrega = 0;
-            this.update();
-            document.getElementById('taxa-status').innerText = "";
+    sugerirBairros: function(valor) {
+        const lista = document.getElementById("lista-sugestoes");
+        if (!valor || valor.length < 2) {
+            lista.classList.add("hidden");
             return;
         }
 
-        // Busca o bairro na lista (ignorando maiúsculas/minúsculas e acentos)
-        const bairroEncontrado = this.bairrosData.find(b => 
-            b.bairro.toLowerCase().trim() === nomeDigitado.toLowerCase().trim()
+        const filtrados = this.bairrosData.filter(b =>
+            b.bairro.toLowerCase().includes(valor.toLowerCase())
         );
 
-        if (bairroEncontrado) {
-            const taxa = parseFloat(String(bairroEncontrado.taxa).replace(',', '.'));
-            this.taxaEntrega = taxa;
-            const statusEl = document.getElementById('taxa-status');
-            statusEl.innerHTML = `✅ Bairro atendido! Taxa: R$ ${taxa.toFixed(2).replace('.', ',')}`;
-            statusEl.style.color = "green";
-        } else {
-            this.taxaEntrega = 0;
-            const statusEl = document.getElementById('taxa-status');
-            statusEl.innerText = "Bairro ainda não reconhecido...";
-            statusEl.style.color = "#666";
+        if (filtrados.length === 0) {
+            lista.classList.add("hidden");
+            return;
         }
 
+        lista.innerHTML = filtrados.map(b => `
+            <div class="sugestao-item" onclick="Cart.selecionarBairro('${b.bairro}', ${String(b.taxa).replace(',', '.')})">
+                ${b.bairro}
+            </div>
+        `).join('');
+        lista.classList.remove("hidden");
+    },
+
+    selecionarBairro: function(nome, taxa) {
+        document.getElementById("cliente-bairro").value = nome;
+        document.getElementById("lista-sugestoes").classList.add("hidden");
+        this.taxaEntrega = taxa;
+        const status = document.getElementById("taxa-status");
+        if (status) {
+            status.innerHTML = `✅ Taxa de entrega: R$ ${taxa.toFixed(2).replace('.', ',')}`;
+            status.style.color = "green";
+        }
         this.update();
     },
 
     // =========================================
-    // ATUALIZA TOTAL
+    // PAGAMENTO
     // =========================================
-    update: function() {
-        const subtotal = this.items.reduce((acc, item) => {
-            const preco = parseFloat(String(item.preco || item.preço || 0).replace(',', '.'));
-            return acc + (preco * item.quantidade);
-        }, 0);
-
-        const totalGeral = subtotal + (this.taxaEntrega || 0);
-
-        const totalEl = document.getElementById("cart-total");
-        if (totalEl) totalEl.innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
-
-        const floatTotalEl = document.getElementById("cart-total-float");
-        if (floatTotalEl) floatTotalEl.innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+    ajustarPagamento: function(tipo) {
+        document.getElementById("area-pix").classList.add("hidden");
+        document.getElementById("area-troco").classList.add("hidden");
+        if (tipo === "Pix") {
+            document.getElementById("area-pix").classList.remove("hidden");
+            const chave = window.storeConfig.whatsapp || "Consulte-nos";
+            document.getElementById("chave-pix-valor").innerText = chave;
+        }
+        if (tipo === "Dinheiro") document.getElementById("area-troco").classList.remove("hidden");
     },
 
-    sendOrder: function() {
-        const nome = document.getElementById("cliente-nome").value;
-        const bairroNome = document.getElementById("cliente-bairro").value;
-        const taxaTexto = "R$ " + (this.taxaEntrega || 0).toFixed(2).replace('.', ',');
-        const endereco = document.getElementById("cliente-endereco").value;
-        const pagamento = document.getElementById("cliente-pagamento").value;
-        const obs = document.getElementById("cliente-obs").value || "Nenhuma";
+    copiarPix: function() {
+        const chave = document.getElementById("chave-pix-valor").innerText;
+        navigator.clipboard.writeText(chave);
+        alert("Pix copiado!");
+    },
 
-        if (!nome || !endereco || !pagamento || !bairroNome) {
-            alert("Por favor, preencha todos os campos obrigatórios!");
-            return;
-        }
+    // =========================================
+    // ATUALIZAR TOTAL
+    // =========================================
+    update: function() {
+        const subtotal = this.items.reduce((sum, item) => {
+            const preco = parseFloat(String(item.preco || item.preço || 0).replace(',', '.'));
+            return sum + (preco * item.quantidade);
+        }, 0);
 
-        let foneRaw = window.storeConfig.telefone ? String(window.storeConfig.telefone).replace(/\D/g, '') : "";
-        if (foneRaw.length <= 11) foneRaw = "55" + foneRaw;
-
-        let mensagem = `*${window.storeConfig.nome_loja}*\n`;
-        mensagem += `-------------------------\n`;
-        mensagem += `*Cliente:* ${nome}\n`;
-        mensagem += `*Endereco:* ${endereco}\n`;
-        mensagem += `*Bairro:* ${bairroNome} - ${taxaTexto}\n`;
-        mensagem += `-------------------------\n`;
-        mensagem += `*PEDIDO:*\n`;
+        const total = subtotal + this.taxaEntrega;
+        const el = document.getElementById("cart-total");
+        if (el) el.innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
         
+        const elFloat = document.getElementById("cart-total-float");
+        if (elFloat) elFloat.innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+    },
+
+    // =========================================
+    // ENVIAR PEDIDO WHATSAPP (DESIGN PROFISSIONAL)
+    // =========================================
+    enviarPedido: function() {
+        if (this.items.length === 0) return alert("Carrinho vazio");
+
+        const nome = document.getElementById("cliente-nome")?.value || "Cliente";
+        const bairro = document.getElementById("cliente-bairro")?.value || "Não informado";
+        const endereco = document.getElementById("cliente-endereco")?.value || "Não informado";
+        const pagamento = document.getElementById("pagamento")?.value || "A combinar";
+        const troco = document.getElementById("valor-troco")?.value || "";
+        const obs = document.getElementById("cliente-obs")?.value || "";
+
+        let fone = window.storeConfig.whatsapp || window.storeConfig.telefone || "";
+        fone = String(fone).replace(/\D/g, '');
+        if (fone.length <= 11) fone = "55" + fone;
+
+        const hora = new Date().getHours();
+        const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+
+        // Montagem da Mensagem com Estilo
+        let mensagem = `🍟 *NOVO PEDIDO - ${window.storeConfig.nome_loja || 'FINO AÇAÍ'}* 🍟\n`;
+        mensagem += `------------------------------------------\n`;
+        mensagem += `🕒 _${saudacao}, ${nome}!_\n\n`;
+        
+        mensagem += `📝 *RESUMO DO PEDIDO*\n`;
+        let subtotal = 0;
         this.items.forEach(item => {
             const preco = parseFloat(String(item.preco || item.preço || 0).replace(',', '.'));
-            mensagem += `${item.quantidade}x ${item.nome} - R$ ${(preco * item.quantidade).toFixed(2).replace('.', ',')}\n`;
+            const totalItem = preco * item.quantidade;
+            subtotal += totalItem;
+            mensagem += `• ${item.quantidade}x ${item.nome} (R$ ${totalItem.toFixed(2).replace('.', ',')})\n`;
         });
 
-        const totalGeral = document.getElementById("cart-total").innerText;
-        mensagem += `\n-------------------------\n`;
-        mensagem += `*Taxa de Entrega:* ${taxaTexto}\n`;
-        mensagem += `*TOTAL DO PEDIDO:* ${totalGeral}\n`;
-        mensagem += `-------------------------\n`;
-        mensagem += `*Forma de Pagamento:* ${pagamento}\n`;
-        mensagem += `*Observacoes:* ${obs}\n`;
-        mensagem += `-------------------------\n`;
-        mensagem += `_Pedido enviado via Cardapio Digital_`;
+        const totalGeral = subtotal + this.taxaEntrega;
 
-        const url = `https://api.whatsapp.com/send?phone=${foneRaw}&text=${encodeURIComponent(mensagem)}`;
+        mensagem += `\n------------------------------------------\n`;
+        mensagem += `💰 *VALORES*\n`;
+        mensagem += `*Subtotal:* R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
+        mensagem += `*Taxa de Entrega:* R$ ${this.taxaEntrega.toFixed(2).replace('.', ',')}\n`;
+        mensagem += `🛒 *TOTAL: R$ ${totalGeral.toFixed(2).replace('.', ',')}*\n`;
+        mensagem += `------------------------------------------\n\n`;
+        
+        mensagem += `📍 *DADOS DE ENTREGA*\n`;
+        mensagem += `*Endereço:* ${endereco}\n`;
+        mensagem += `*Bairro:* ${bairro}\n`;
+        mensagem += `💳 *Pagamento:* ${pagamento}\n`;
+
+        if (pagamento === "Dinheiro" && troco) {
+            mensagem += `💵 *Troco para:* R$ ${troco}\n`;
+        }
+        
+        if (obs) {
+            mensagem += `\n💬 *OBSERVAÇÕES:* ${obs}\n`;
+        }
+        
+        mensagem += `\n------------------------------------------\n`;
+        mensagem += `_Gerado por Cardápio Digital_`;
+
+        const url = `https://api.whatsapp.com/send?phone=${fone}&text=${encodeURIComponent(mensagem)}`;
         window.open(url, "_blank");
+
+        // Limpar carrinho e fechar modal
+        this.items = [];
+        this.taxaEntrega = 0;
+        this.render();
+        this.update();
+        this.closeCheckout();
     }
 };
