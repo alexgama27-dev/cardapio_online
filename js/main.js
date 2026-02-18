@@ -13,12 +13,10 @@ window.onload = async () => {
             const storeNameEl = document.getElementById("store-name");
             if (storeNameEl) storeNameEl.innerText = window.storeConfig.nome_loja || "Minha Loja";
             
-            // Inicia o Carrossel (Nível 2)
             iniciarCarrosselDinamico();
 
             const logoImg = document.getElementById("logo");
             if (logoImg && window.storeConfig.logo) {
-                // Apenas carrega a imagem, sem analisar cores
                 logoImg.src = window.storeConfig.logo + '?v=' + new Date().getTime();
                 
                 logoImg.onload = () => {
@@ -36,6 +34,9 @@ window.onload = async () => {
         }
 
         verificarHorario();
+        
+        // Chamada da nova função de saudação ao carregar
+        atualizarSaudacao();
 
         setTimeout(() => {
             if (data.bairros) renderBairros(data.bairros);
@@ -46,6 +47,25 @@ window.onload = async () => {
         console.error("Erro ao carregar dados:", error);
     }
 };
+
+// --- NOVA FUNÇÃO: SAUDAÇÃO DINÂMICA ---
+function atualizarSaudacao() {
+    const agora = new Date();
+    const hora = agora.getHours();
+    let saudacao = "";
+
+    if (hora >= 5 && hora < 12) saudacao = "Bom dia";
+    else if (hora >= 12 && hora < 18) saudacao = "Boa tarde";
+    else saudacao = "Boa noite";
+
+    const nomeInput = document.getElementById('cliente-nome');
+    const nomeCliente = nomeInput ? nomeInput.value : "";
+    const displaySaudacao = document.getElementById('saudacao-usuario');
+    
+    if (displaySaudacao) {
+        displaySaudacao.innerText = `${saudacao}${nomeCliente ? ', ' + nomeCliente : ''}! 👋`;
+    }
+}
 
 // --- FUNÇÃO DO CARROSSEL ---
 function iniciarCarrosselDinamico() {
@@ -135,10 +155,6 @@ function renderSkeletons() {
         </div>`).join('');
 }
 
-// --- RENDERIZAÇÃO DE BAIRROS (AJUSTADO PARA INPUT) ---
 function renderBairros(bairros) {
-    // Apenas guarda os dados no Cart para consulta futura
     Cart.bairrosData = bairros;
-
-    // Não precisa mais preencher um select, pois usamos input de texto
 }
