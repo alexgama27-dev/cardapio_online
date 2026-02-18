@@ -25,8 +25,6 @@ window.onload = async () => {
                     const corP = window.storeConfig.cor_principal;
                     const corS = window.storeConfig.cor_secundaria;
 
-                    // Só aplica cores se houver algo preenchido na planilha
-                    // Caso contrário, o vermelho do CSS permanece
                     if (corP && corP.trim() !== "" && corP !== "#") {
                         document.documentElement.style.setProperty('--cor-principal', corP);
                     }
@@ -137,13 +135,10 @@ function renderSkeletons() {
         </div>`).join('');
 }
 
+// --- RENDERIZAÇÃO DE BAIRROS (AJUSTADO PARA INPUT) ---
 function renderBairros(bairros) {
-    const select = document.getElementById("cliente-bairro");
-    if (!select) return;
-    select.innerHTML = '<option value="0">Selecione o bairro...</option>';
-    bairros.forEach(item => {
-        const taxaNum = parseFloat(String(item.taxa).replace(',', '.'));
-        const opt = new Option(`${item.bairro} - R$ ${taxaNum.toFixed(2).replace('.', ',')}`, taxaNum);
-        select.add(opt);
-    });
+    // Apenas guarda os dados no Cart para consulta futura
+    Cart.bairrosData = bairros;
+
+    // Não precisa mais preencher um select, pois usamos input de texto
 }
