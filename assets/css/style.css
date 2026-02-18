@@ -5,7 +5,7 @@
     --cor-principal: #990499; 
     --cor-secundaria: #333;
     --cor-fundo: #f4f4f4;
-    --cor-card: #ee9ef8;
+    --cor-card: #e8baee;
 }
 
 * {
@@ -374,3 +374,4 @@ body {
     border: 2px solid var(--cor-principal);
     transform: translateY(-2px);
 }
+
