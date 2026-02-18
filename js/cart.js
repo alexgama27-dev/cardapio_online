@@ -1,5 +1,7 @@
 const Cart = {
     items: [],
+    bairrosData: [],   // <-- Array com os bairros e taxas vindo da API
+    taxaEntrega: 0,    // Taxa de entrega atual baseada no bairro
 
     add: function(product) {
         const existingItem = this.items.find(item => item.nome === product.nome);
@@ -9,7 +11,7 @@ const Cart = {
             this.items.push({ ...product, quantidade: 1 });
         }
         this.render();
-        this.updateTotal();
+        this.update();
     },
 
     remove: function(index) {
@@ -19,7 +21,7 @@ const Cart = {
             this.items.splice(index, 1);
         }
         this.render();
-        this.updateTotal();
+        this.update();
     },
 
     clear: function() {
@@ -27,25 +29,9 @@ const Cart = {
         if (confirm("Deseja realmente remover todos os itens do pedido?")) {
             this.items = [];
             this.render();
-            this.updateTotal();
+            this.update();
             this.toggle();
         }
-    },
-
-    updateTotal: function() {
-        let subtotal = this.items.reduce((acc, item) => {
-            const preco = parseFloat(String(item.preco || item.preço || 0).replace(',', '.'));
-            return acc + (preco * (item.quantidade || 1));
-        }, 0);
-
-        const taxaEntrega = parseFloat(document.getElementById("cliente-bairro")?.value || 0);
-        const totalGeral = subtotal + taxaEntrega;
-
-        const totalEl = document.getElementById("cart-total");
-        if (totalEl) totalEl.innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
-
-        const floatTotalEl = document.getElementById("cart-total-float");
-        if (floatTotalEl) floatTotalEl.innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
     },
 
     render: function() {
@@ -60,7 +46,6 @@ const Cart = {
         container.innerHTML = this.items.map((item, index) => {
             const preco = parseFloat(String(item.preco || item.preço || 0).replace(',', '.'));
             const itemJson = JSON.stringify(item).replace(/'/g, "&apos;");
-
             return `
                 <div class="cart-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0;">
                     <div class="cart-item-info">
@@ -91,27 +76,72 @@ const Cart = {
         document.getElementById("checkout-modal").classList.add("hidden");
     },
 
-    atualizarTaxa: function() { this.updateTotal(); },
+    // =========================================
+    // NOVA FUNÇÃO: identifica bairro digitado
+    // =========================================
+    identificarBairro: function(nomeDigitado) {
+        if (!nomeDigitado || nomeDigitado.length < 3) {
+            this.taxaEntrega = 0;
+            this.update();
+            document.getElementById('taxa-status').innerText = "";
+            return;
+        }
+
+        // Busca o bairro na lista (ignorando maiúsculas/minúsculas e acentos)
+        const bairroEncontrado = this.bairrosData.find(b => 
+            b.bairro.toLowerCase().trim() === nomeDigitado.toLowerCase().trim()
+        );
+
+        if (bairroEncontrado) {
+            const taxa = parseFloat(String(bairroEncontrado.taxa).replace(',', '.'));
+            this.taxaEntrega = taxa;
+            const statusEl = document.getElementById('taxa-status');
+            statusEl.innerHTML = `✅ Bairro atendido! Taxa: R$ ${taxa.toFixed(2).replace('.', ',')}`;
+            statusEl.style.color = "green";
+        } else {
+            this.taxaEntrega = 0;
+            const statusEl = document.getElementById('taxa-status');
+            statusEl.innerText = "Bairro ainda não reconhecido...";
+            statusEl.style.color = "#666";
+        }
+
+        this.update();
+    },
+
+    // =========================================
+    // ATUALIZA TOTAL
+    // =========================================
+    update: function() {
+        const subtotal = this.items.reduce((acc, item) => {
+            const preco = parseFloat(String(item.preco || item.preço || 0).replace(',', '.'));
+            return acc + (preco * item.quantidade);
+        }, 0);
+
+        const totalGeral = subtotal + (this.taxaEntrega || 0);
+
+        const totalEl = document.getElementById("cart-total");
+        if (totalEl) totalEl.innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+
+        const floatTotalEl = document.getElementById("cart-total-float");
+        if (floatTotalEl) floatTotalEl.innerText = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+    },
 
     sendOrder: function() {
         const nome = document.getElementById("cliente-nome").value;
-        const bairroSelect = document.getElementById("cliente-bairro");
-        const bairroNome = bairroSelect.options[bairroSelect.selectedIndex].text;
-        const taxaTexto = "R$ " + parseFloat(bairroSelect.value).toFixed(2).replace('.', ',');
+        const bairroNome = document.getElementById("cliente-bairro").value;
+        const taxaTexto = "R$ " + (this.taxaEntrega || 0).toFixed(2).replace('.', ',');
         const endereco = document.getElementById("cliente-endereco").value;
         const pagamento = document.getElementById("cliente-pagamento").value;
         const obs = document.getElementById("cliente-obs").value || "Nenhuma";
 
-        if (!nome || !endereco || !pagamento || bairroSelect.value === "0") {
+        if (!nome || !endereco || !pagamento || !bairroNome) {
             alert("Por favor, preencha todos os campos obrigatórios!");
             return;
         }
 
-        // Puxa telefone da planilha (coluna 'telefone')
         let foneRaw = window.storeConfig.telefone ? String(window.storeConfig.telefone).replace(/\D/g, '') : "";
         if (foneRaw.length <= 11) foneRaw = "55" + foneRaw;
 
-        // FORMATAÇÃO DA MENSAGEM APROVADA
         let mensagem = `*${window.storeConfig.nome_loja}*\n`;
         mensagem += `-------------------------\n`;
         mensagem += `*Cliente:* ${nome}\n`;
