@@ -2,10 +2,10 @@
    CONFIGURAÇÕES GERAIS E VARIÁVEIS
    ========================================= */
 :root {
-    --cor-principal: #990499; 
-    --cor-secundaria: #333;
-    --cor-fundo: #fcf9fc;
-    --cor-card: #f5c9cb;
+    --cor-principal: #dd1717; 
+    --cor-secundaria: #f3c5c5;
+    --cor-fundo: #000000;
+    --cor-card: #302c2c;
 }
 
 * {
@@ -374,4 +374,5 @@ body {
     border: 2px solid var(--cor-principal);
     transform: translateY(-2px);
 }
+
 
