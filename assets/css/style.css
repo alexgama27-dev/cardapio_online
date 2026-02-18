@@ -4,8 +4,8 @@
 :root {
     --cor-principal: #990499; 
     --cor-secundaria: #333;
-    --cor-fundo: #f4f4f4;
-    --cor-card: #e8baee;
+    --cor-fundo: #fcf9fc;
+    --cor-card: #f5c9cb;
 }
 
 * {
@@ -374,3 +374,4 @@ body {
     border: 2px solid var(--cor-principal);
     transform: translateY(-2px);
 }
+
