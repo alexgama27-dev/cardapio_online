@@ -11,30 +11,87 @@
 </head>
 <body>
 
+    <!-- =========================================
+         HEADER
+    ========================================== -->
     <header class="header">
+        <div id="header-bg"></div>
+
         <img id="logo" class="logo" alt="Logo da Loja" crossorigin="anonymous">
         <h1 id="store-name">Carregando...</h1>
+        
+        <div id="loja-status-msg" class="status-loja"></div>
     </header>
 
-    <main id="products" class="products"></main>
 
+    <!-- =========================================
+         VITRINE DE PRODUTOS (DINÂMICA VIA API)
+    ========================================== -->
+    <main id="products" class="products">
+        <!-- 
+            Os produtos são inseridos aqui via main.js
+            Estrutura esperada de cada produto:
+
+            <div class="product-card">
+
+                <div class="product-card-top">
+                    <img class="product-img">
+
+                    <div class="product-info">
+                        <h3></h3>
+                        <p></p>
+                        <div class="product-price"></div>
+                    </div>
+                </div>
+
+                <button class="btn-add">Adicionar</button>
+
+            </div>
+        -->
+    </main>
+
+
+    <!-- =========================================
+         CARRINHO FLUTUANTE
+    ========================================== -->
     <button class="cart-float" onclick="Cart.toggle()">
         🛒 Ver Carrinho  
         <span id="cart-total-float">R$ 0,00</span>
     </button>
 
+
+    <!-- =========================================
+         MODAL DO CARRINHO
+    ========================================== -->
     <div id="cart-modal" class="cart-modal hidden">
         <div class="cart-box">
             <h2>Seu Pedido</h2>
+            
+            <button onclick="Cart.clear()" class="btn-clear-cart" 
+                style="width: 100%; margin-bottom: 15px; padding: 8px; background: #fff1f1; color: #d9534f; border: 1px solid #d9534f; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                🗑️ Limpar Carrinho
+            </button>
+
             <div id="cart-items"></div>
+            
             <div class="cart-total">
-                Total: <span id="cart-total">R$ 0,00</span>
-            </div>
-            <button onclick="Cart.checkout()" class="btn-primary">Finalizar Pedido</button>
-            <button onclick="Cart.toggle()" class="btn-secondary">Fechar</button>
+    Total: <span id="cart-total"><strong>R$ 0,00</strong></span>
+</div>
+            
+            <button id="btn-finalizar-cart" onclick="Cart.checkout()" class="btn-primary">
+                Finalizar Pedido
+            </button>
+
+            <button onclick="Cart.toggle()" class="btn-secondary">
+                Fechar
+            </button>
         </div>
     </div>
 
+
+    <!-- =========================================
+         MODAL CHECKOUT
+    ========================================== -->
     <div id="checkout-modal" class="checkout-modal hidden">
         <div class="checkout-box">
             <h2>Finalizar Pedido</h2>
@@ -71,7 +128,7 @@
                 <textarea id="cliente-obs" placeholder="Ex: Sem cebola, trocar troco para R$ 50..."></textarea>
             </div>
 
-            <button onclick="Cart.sendOrder()" class="btn-primary">
+            <button id="btn-enviar-whatsapp" onclick="Cart.sendOrder()" class="btn-primary">
                 🚀 Enviar Pedido para o WhatsApp
             </button>
             
@@ -81,6 +138,10 @@
         </div>
     </div>
 
+
+    <!-- =========================================
+         SCRIPTS
+    ========================================== -->
     <script src="js/api.js"></script>
     <script src="js/cart.js"></script>
     <script src="js/main.js"></script>
