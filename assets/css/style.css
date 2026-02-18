@@ -5,14 +5,14 @@
     --cor-principal: #990499; 
     --cor-secundaria: #333;
     --cor-fundo: #f4f4f4;
-    --cor-card: #ffffff;
+    --cor-card: #ee9ef8;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Verdana, Geneva, Tahoma, sans-serif,
+    font-family: 'Segoe UI', Verdana, Geneva, Tahoma, sans-serif;
 }
 
 body {
@@ -98,11 +98,12 @@ body {
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .product-card:hover {
     transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.15);
 }
 
 .product-card-top {
@@ -142,13 +143,15 @@ body {
 
 .product-card-bottom {
     margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .product-price {
     font-weight: bold;
     color: var(--cor-principal);
     font-size: 1.15rem;
-    margin-bottom: 10px;
 }
 
 /* =========================================
@@ -214,21 +217,34 @@ body {
     z-index: 1000;
 }
 
-#cart-total {
-    font-weight: bold;
-}
-
-.hidden { display: none !important; }
-
 .cart-box, .checkout-box {
     background: white;
     width: 95%;
     max-width: 450px;
-    max-height: 90vh;
+    max-height: calc(100vh - 40px); 
     border-radius: 20px;
     padding: 25px;
     overflow-y: auto;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.hidden { display: none !important; }
+
+.cart-total {
+    border-top: 2px dashed #eee;
+    padding-top: 15px;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+}
+
+#taxa-status {
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    transition: all 0.3s ease;
 }
 
 /* =========================================
@@ -257,7 +273,7 @@ body {
     font-size: 1rem;
     background-color: #f9f9f9;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, background-color 0.2s;
 }
 
 .form-group input:focus, 
@@ -297,7 +313,7 @@ body {
 }
 
 /* =========================================
-   BOTÃO SECUNDÁRIO
+   BOTÕES SECUNDÁRIOS E LIMPAR
    ========================================= */
 .btn-secondary {
     width: 100%;
@@ -318,10 +334,15 @@ body {
     transform: translateY(-2px);
 }
 
-/* =========================================
-   BOTÃO LIMPAR CARRINHO
-   ========================================= */
 .btn-clear-cart {
+    width: 100%;
+    padding: 8px;
+    background: #fff1f1;
+    color: #d9534f;
+    border: 1px solid #d9534f;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
     transition: all 0.3s ease;
 }
 
