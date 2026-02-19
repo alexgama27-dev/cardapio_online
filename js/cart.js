@@ -92,8 +92,12 @@ const Cart = {
         document.getElementById("checkout-modal").classList.remove("hidden");
     },
 
-    closeCheckout: function() {
+   closeCheckout: function() {
+        // 1. Garante que o formulário de endereço FECHE
         document.getElementById("checkout-modal").classList.add("hidden");
+
+        // 2. Garante que o carrinho ABRA novamente
+        document.getElementById("cart-modal").classList.remove("hidden");
     },
 
     // =========================================
@@ -173,7 +177,7 @@ const Cart = {
     },
 
     // =========================================
-    // ENVIAR PEDIDO WHATSAPP (DESIGN PROFISSIONAL)
+    // ENVIAR PEDIDO WHATSAPP (MENSAGEM ATUALIZADA)
     // =========================================
     enviarPedido: function() {
         if (this.items.length === 0) return alert("Carrinho vazio");
@@ -192,12 +196,13 @@ const Cart = {
         const hora = new Date().getHours();
         const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
 
-        // Montagem da Mensagem com Estilo
-        let mensagem = `🍟 *NOVO PEDIDO - ${window.storeConfig.nome_loja || 'FINO AÇAÍ'}* 🍟\n`;
+        // --- INÍCIO DA MENSAGEM COM GENTILEZA ---
+        let mensagem = `✅ *NOVO PEDIDO - ${window.storeConfig.nome_loja || 'FINO AÇAÍ'}* ✅\n`;
         mensagem += `------------------------------------------\n`;
-        mensagem += `🕒 _${saudacao}, ${nome}!_\n\n`;
+        mensagem += `Olá, equipe! ${saudacao}.\n`;
+        mensagem += `*${nome}* acabou de enviar um pedido:\n\n`;
         
-        mensagem += `📝 *RESUMO DO PEDIDO*\n`;
+        mensagem += `📝 *ITENS DO PEDIDO*\n`;
         let subtotal = 0;
         this.items.forEach(item => {
             const preco = parseFloat(String(item.preco || item.preço || 0).replace(',', '.'));
@@ -209,16 +214,16 @@ const Cart = {
         const totalGeral = subtotal + this.taxaEntrega;
 
         mensagem += `\n------------------------------------------\n`;
-        mensagem += `💰 *VALORES*\n`;
+        mensagem += `💰 *RESUMO DE VALORES*\n`;
         mensagem += `*Subtotal:* R$ ${subtotal.toFixed(2).replace('.', ',')}\n`;
         mensagem += `*Taxa de Entrega:* R$ ${this.taxaEntrega.toFixed(2).replace('.', ',')}\n`;
         mensagem += `🛒 *TOTAL: R$ ${totalGeral.toFixed(2).replace('.', ',')}*\n`;
         mensagem += `------------------------------------------\n\n`;
         
-        mensagem += `📍 *DADOS DE ENTREGA*\n`;
+        mensagem += `📍 *DADOS PARA ENTREGA*\n`;
         mensagem += `*Endereço:* ${endereco}\n`;
         mensagem += `*Bairro:* ${bairro}\n`;
-        mensagem += `💳 *Pagamento:* ${pagamento}\n`;
+        mensagem += `💳 *Forma de Pagamento:* ${pagamento}\n`;
 
         if (pagamento === "Dinheiro" && troco) {
             mensagem += `💵 *Troco para:* R$ ${troco}\n`;
@@ -229,7 +234,8 @@ const Cart = {
         }
         
         mensagem += `\n------------------------------------------\n`;
-        mensagem += `_Gerado por Cardápio Digital_`;
+        mensagem += `🙏 *Aguardamos a confirmação do pedido. Muito obrigado!*`;
+        // --- FIM DA MENSAGEM ---
 
         const url = `https://api.whatsapp.com/send?phone=${fone}&text=${encodeURIComponent(mensagem)}`;
         window.open(url, "_blank");
